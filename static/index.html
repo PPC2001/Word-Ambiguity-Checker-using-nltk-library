@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Ambiguity Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 600px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 90%;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background-color: grey;
+            cursor: not-allowed;
+        }
+
+        #spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none; /* Initially hidden */
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Word Ambiguity Checker</h1>
+        <form id="word-form">
+            <label for="word">Enter a word:</label>
+            <br>
+            <input type="text" id="word" name="word" required>
+            <button type="submit">Check</button>
+            <div id="spinner"></div>
+        </form>
+        <div id="result" class="results"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('word-form');
+        const resultDiv = document.getElementById('result');
+        const spinner = document.getElementById('spinner');
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const word = document.getElementById('word').value;
+            spinner.style.display = 'inline-block'; // Show spinner
+            resultDiv.style.display = 'none'; // Hide results div initially
+
+            // Clear previous results
+            resultDiv.innerHTML = '';
+
+            const response = await fetch('/check_ambiguity/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ word: word }),
+            });
+
+            const result = await response.json();
+            spinner.style.display = 'none'; // Hide spinner
+
+            // Display results
+            if (result.message) {
+                resultDiv.innerHTML = `<p><strong>${result.message}</strong></p>`;
+                if (result.meanings.length > 0) {
+                    const meaningsList = result.meanings.map(meaning => `<li>${meaning}</li>`).join('');
+                    resultDiv.innerHTML += `<ul>${meaningsList}</ul>`;
+                }
+                resultDiv.style.display = 'block'; // Show the result div once the response is received
+            } else {
+                resultDiv.innerHTML = `<p>No meanings found for the word "${word}".</p>`;
+                resultDiv.style.display = 'block'; // Show the result div
+            }
+        });
+    </script>
+</body>
+</html>
